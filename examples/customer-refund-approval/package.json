@@ -1,0 +1,19 @@
+{
+  "name": "@tryagent/customer-refund-approval-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm run build && node --test test/*.test.mjs",
+    "start": "pnpm run build && node dist/cli.js"
+  },
+  "dependencies": {
+    "@langchain/langgraph": "^1.4.2",
+    "@tryagent/sdk": "^0.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
+  }
+}

@@ -1,15 +1,24 @@
-export { createTryAgentClientFromEnv, DEFAULT_TRYAGENT_BASE_URL } from "./env.js";
+export {
+  DEFAULT_TRYAGENT_BASE_URL,
+  createTryAgentClientFromEnv,
+} from "./env.js";
 export { createStockResearchGraph } from "./graph.js";
 export {
-  assessResearch,
-  createStaticStockResearcher,
-  draftReport,
-} from "./researcher.js";
+  assessInvestmentThesis,
+  createStaticStockResearchStore,
+  draftClientMemo,
+  draftCompletedSummary,
+} from "./research.js";
 export type {
-  RiskAssessment,
-  StockResearcher,
+  CommitteeDecision,
+  ComplianceAction,
+  ComplianceReviewResume,
+  InvestmentCommitteeResume,
+  InvestmentThesis,
+  PortfolioContext,
   StockResearchGraphOptions,
   StockResearchSnapshot,
   StockResearchState,
-  TryAgentEscalationClient,
+  StockResearchStore,
+  TryAgentStockResearchInterruptPayload,
 } from "./types.js";

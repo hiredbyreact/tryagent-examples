@@ -1,3 +1,4 @@
 export function parseTickerArg(args: string[]): string | undefined {
-  return args.map((arg) => arg.trim()).find((arg) => arg !== "" && arg !== "--");
+  const ticker = args.find((arg) => arg !== "--")?.trim();
+  return ticker ? ticker.toUpperCase() : undefined;
 }

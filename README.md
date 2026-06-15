@@ -6,6 +6,7 @@ Manual edits in this public repository may be overwritten by the sync workflow. 
 
 ## Examples
 
+- [Customer Refund Approval Example](examples/customer-refund-approval)
 - [LangGraph Stock Research Example](examples/langgraph-stock-research)
 
 ## Setup

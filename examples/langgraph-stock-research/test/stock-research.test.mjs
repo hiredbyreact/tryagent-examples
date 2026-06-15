@@ -1,117 +1,162 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Command, INTERRUPT, isInterrupted } from "@langchain/langgraph";
 import {
   DEFAULT_TRYAGENT_BASE_URL,
+  createStaticStockResearchStore,
   createStockResearchGraph,
   createTryAgentClientFromEnv,
 } from "../dist/index.js";
 import { parseTickerArg } from "../dist/cli-args.js";
 
-test("high-risk stock research creates a TryAgent escalation", async () => {
-  const escalations = [];
-  const tryagent = {
-    async escalate(policy, input) {
-      escalations.push({ policy, input });
-      return {
-        id: "esc_test_123",
-        object: "escalation",
-        project: "ten_test",
-        policy,
-        queue: "Research",
-        agentId: input.agentId,
-        runId: input.runId,
-        subject: input.subject,
-        question: input.question,
-        evidence: input.evidence,
-        choices: input.choices,
-        status: "open",
-        dueAt: new Date(Date.now() + 60000).toISOString(),
-        timeRemainingMs: 60000,
-        defaultChoice: "watchlist",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-    },
-  };
-  const researcher = {
-    async research() {
-      return {
-        ticker: "NVDA",
-        companyName: "Nvidia Corporation",
-        priceChangePercent: 9.2,
-        peRatio: 78,
-        debtToEquity: 2.4,
-        headlines: [
-          "AI chip demand surges while analysts debate valuation risk",
-        ],
-      };
-    },
-  };
+test("high-risk stock research pauses for investment committee and compliance review", async () => {
+  const researchStore = createStaticStockResearchStore();
 
   const graph = createStockResearchGraph({
-    tryagent,
-    researcher,
-    policy: "stock.research_approval",
+    researchStore,
+    investmentPolicy: "research.investment_committee",
+    compliancePolicy: "research.compliance_review",
     resumeUrl: "https://example.com/webhooks/tryagent",
   });
+  const config = {
+    configurable: { thread_id: "thread-stock-nvda-client-42" },
+  };
 
-  const result = await graph.invoke({
-    ticker: "NVDA",
-    runId: "thread-stock-nvda",
-  });
-
-  assert.equal(result.status, "awaiting_human");
-  assert.equal(result.escalationId, "esc_test_123");
-  assert.equal(escalations.length, 1);
-  assert.equal(escalations[0].policy, "stock.research_approval");
-  assert.equal(escalations[0].input.agentId, "stock-research-langgraph");
-  assert.equal(escalations[0].input.runId, "thread-stock-nvda");
-  assert.deepEqual(escalations[0].input.subject, {
-    type: "stock",
-    id: "NVDA",
-    label: "Nvidia Corporation (NVDA)",
-  });
-  assert.deepEqual(
-    escalations[0].input.choices.map((choice) => choice.id),
-    ["approve", "watchlist", "reject"],
+  const committeeInterruptResult = await graph.invoke(
+    {
+      ticker: "NVDA",
+      runId: "thread-stock-nvda-client-42",
+      clientId: "client_42",
+    },
+    config,
   );
-  assert.match(escalations[0].input.evidence.join("\n"), /Risk score/);
-  assert.equal(escalations[0].input.resume.url, "https://example.com/webhooks/tryagent");
+
+  assert.equal(isInterrupted(committeeInterruptResult), true);
+  const committeeInterrupt = committeeInterruptResult[INTERRUPT][0];
+  assert.equal(
+    committeeInterrupt.value.kind,
+    "tryagent_investment_committee_review",
+  );
+  assert.equal(
+    committeeInterrupt.value.policy,
+    "research.investment_committee",
+  );
+  assert.equal(
+    committeeInterrupt.value.tryagentInput.agentId,
+    "portfolio-research-langgraph",
+  );
+  assert.equal(
+    committeeInterrupt.value.tryagentInput.runId,
+    "thread-stock-nvda-client-42",
+  );
+  assert.deepEqual(committeeInterrupt.value.tryagentInput.subject, {
+    type: "stock_research",
+    id: "NVDA",
+    label: "Nvidia Corporation (NVDA) for client_42",
+  });
+  assert.equal(
+    committeeInterrupt.value.tryagentInput.question,
+    "Approve the proposed NVDA research stance before drafting a client memo?",
+  );
+  assert.deepEqual(
+    committeeInterrupt.value.tryagentInput.choices.map((choice) => choice.id),
+    ["approve_buy", "move_to_watchlist", "reject_thesis"],
+  );
+  assert.equal(
+    committeeInterrupt.value.tryagentInput.resume.url,
+    "https://example.com/webhooks/tryagent",
+  );
+  assert.match(
+    committeeInterrupt.value.tryagentInput.metadata.thesisScore,
+    /^\d+$/,
+  );
+
+  const complianceInterruptResult = await graph.invoke(
+    new Command({
+      resume: {
+        escalationId: "esc_committee_123",
+        decision: "move_to_watchlist",
+        reviewedBy: "pm@example.com",
+        notes: "Valuation risk is acceptable for watchlist, not a new buy.",
+      },
+    }),
+    config,
+  );
+
+  assert.equal(isInterrupted(complianceInterruptResult), true);
+  const complianceInterrupt = complianceInterruptResult[INTERRUPT][0];
+  assert.equal(
+    complianceInterrupt.value.kind,
+    "tryagent_research_compliance_review",
+  );
+  assert.equal(
+    complianceInterrupt.value.policy,
+    "research.compliance_review",
+  );
+  assert.equal(
+    complianceInterrupt.value.tryagentInput.agentId,
+    "portfolio-research-langgraph",
+  );
+  assert.match(
+    complianceInterrupt.value.draftMemo,
+    /Nvidia Corporation \(NVDA\)/,
+  );
+  assert.match(
+    complianceInterrupt.value.draftMemo,
+    /Valuation risk is acceptable for watchlist/,
+  );
+  assert.deepEqual(
+    complianceInterrupt.value.tryagentInput.choices.map((choice) => choice.id),
+    ["publish_memo", "revise_memo", "block_publication"],
+  );
+  assert.match(
+    complianceInterrupt.value.tryagentInput.evidence.join("\n"),
+    /not personalized financial advice/i,
+  );
+
+  const completed = await graph.invoke(
+    new Command({
+      resume: {
+        escalationId: "esc_compliance_456",
+        action: "publish_memo",
+      },
+    }),
+    config,
+  );
+
+  assert.equal(isInterrupted(completed), false);
+  assert.equal(completed.status, "completed");
+  assert.equal(completed.committeeEscalationId, "esc_committee_123");
+  assert.equal(completed.complianceEscalationId, "esc_compliance_456");
+  assert.equal(completed.committeeDecision, "move_to_watchlist");
+  assert.match(completed.clientMemo, /watchlist/i);
+  assert.match(completed.summary, /Nvidia Corporation \(NVDA\)/);
 });
 
-test("low-risk stock research completes without a TryAgent escalation", async () => {
-  const tryagent = {
-    async escalate() {
-      throw new Error("unexpected escalation");
-    },
-  };
-  const researcher = {
-    async research() {
-      return {
-        ticker: "MSFT",
-        companyName: "Microsoft Corporation",
-        priceChangePercent: 1.1,
-        peRatio: 31,
-        debtToEquity: 0.4,
-        headlines: ["Cloud revenue expands with stable margins"],
-      };
-    },
-  };
-
+test("lower-risk stock research completes without a TryAgent escalation interrupt", async () => {
   const graph = createStockResearchGraph({
-    tryagent,
-    researcher,
-    policy: "stock.research_approval",
+    researchStore: createStaticStockResearchStore(),
+    investmentPolicy: "research.investment_committee",
+    compliancePolicy: "research.compliance_review",
   });
 
-  const result = await graph.invoke({
-    ticker: "MSFT",
-    runId: "thread-stock-msft",
-  });
+  const result = await graph.invoke(
+    {
+      ticker: "MSFT",
+      runId: "thread-stock-msft-client-42",
+      clientId: "client_42",
+    },
+    {
+      configurable: { thread_id: "thread-stock-msft-client-42" },
+    },
+  );
 
+  assert.equal(isInterrupted(result), false);
   assert.equal(result.status, "completed");
-  assert.equal(result.escalationId, undefined);
-  assert.match(result.report, /Microsoft Corporation/);
+  assert.equal(result.committeeEscalationId, undefined);
+  assert.equal(result.complianceEscalationId, undefined);
+  assert.match(result.clientMemo, /Microsoft Corporation \(MSFT\)/);
+  assert.match(result.clientMemo, /balanced growth mandate/i);
 });
 
 test("TryAgent client factory defaults to the public production API", () => {
@@ -124,7 +169,7 @@ test("TryAgent client factory defaults to the public production API", () => {
 });
 
 test("CLI ticker parser tolerates pnpm argument separator", () => {
-  assert.equal(parseTickerArg(["--", "NVDA"]), "NVDA");
+  assert.equal(parseTickerArg(["--", "nvda"]), "NVDA");
   assert.equal(parseTickerArg(["MSFT"]), "MSFT");
   assert.equal(parseTickerArg(["--", "  "]), undefined);
   assert.equal(parseTickerArg(["--"]), undefined);
