@@ -1,4 +1,4 @@
-export { createTryAgentClientFromEnv, TEST_TRYAGENT_BASE_URL } from "./env.js";
+export { createTryAgentClientFromEnv, DEFAULT_TRYAGENT_BASE_URL } from "./env.js";
 export { createStockResearchGraph } from "./graph.js";
 export {
   assessResearch,

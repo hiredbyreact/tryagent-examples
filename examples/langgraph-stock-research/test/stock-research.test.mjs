@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  TEST_TRYAGENT_BASE_URL,
+  DEFAULT_TRYAGENT_BASE_URL,
   createStockResearchGraph,
   createTryAgentClientFromEnv,
 } from "../dist/index.js";
@@ -114,12 +114,13 @@ test("low-risk stock research completes without a TryAgent escalation", async ()
   assert.match(result.report, /Microsoft Corporation/);
 });
 
-test("TryAgent client factory defaults to the test API instead of prod", () => {
+test("TryAgent client factory defaults to the public production API", () => {
   const client = createTryAgentClientFromEnv({
     TRYAGENT_API_KEY: "ain_live_aik_test_secret",
   });
 
-  assert.equal(client.baseUrl, TEST_TRYAGENT_BASE_URL);
+  assert.equal(client.baseUrl, DEFAULT_TRYAGENT_BASE_URL);
+  assert.equal(DEFAULT_TRYAGENT_BASE_URL, "https://api.tryagent.ai");
 });
 
 test("CLI ticker parser tolerates pnpm argument separator", () => {
