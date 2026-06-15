@@ -1,0 +1,22 @@
+{
+  "name": "tryagent-examples",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runnable examples for TryAgent.",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiredbyreact/tryagent-examples.git"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.17.0",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
