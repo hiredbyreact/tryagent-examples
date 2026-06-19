@@ -28,7 +28,7 @@ https://api.tryagent.ai
 ## Setup
 
 1. Open the TryAgent app:
-   `https://app.tryagent.ai`
+   `https://tryagent.ai`
 2. Create an escalation policy with a key such as `support.refund_approval`.
 3. Create an API key in **Settings -> API keys**.
 4. Export the environment variables:
