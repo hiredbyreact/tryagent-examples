@@ -8,6 +8,7 @@ Manual edits in this public repository may be overwritten by the sync workflow. 
 
 - [Customer Refund Approval Example](examples/customer-refund-approval)
 - [LangGraph Stock Research Example](examples/langgraph-stock-research)
+- [Workflow Escalation Catalog](examples/workflow-escalation-catalog)
 
 ## Setup
 

@@ -6,12 +6,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:e2e": "corepack pnpm run build && node --test test/*.e2e.mjs",
     "test": "pnpm run build && node --test test/*.test.mjs",
     "start": "pnpm run build && node dist/cli.js"
   },
   "dependencies": {
     "@langchain/langgraph": "^1.4.2",
-    "@tryagent/sdk": "^0.0.4"
+    "@tryagent/sdk": "^0.0.57"
   },
   "devDependencies": {
     "@types/node": "^22.10.2"

@@ -1,0 +1,89 @@
+[
+  {
+    "slug": "customer-refund-approval",
+    "title": "Customer Refund Approval Example",
+    "kind": "langgraph",
+    "path": "examples/customer-refund-approval",
+    "packageName": "@tryagent/customer-refund-approval-example",
+    "language": "typescript",
+    "sdkCoverage": ["typescript"],
+    "description": "LangGraph refund workflow with TryAgent approval and customer message review."
+  },
+  {
+    "slug": "langgraph-stock-research",
+    "title": "LangGraph Stock Research Example",
+    "kind": "langgraph",
+    "path": "examples/langgraph-stock-research",
+    "packageName": "@tryagent/langgraph-stock-research-example",
+    "language": "typescript",
+    "sdkCoverage": ["typescript"],
+    "description": "LangGraph stock research workflow with TryAgent investment committee and compliance review interrupts."
+  },
+  {
+    "slug": "workflow-escalation-catalog",
+    "title": "Workflow Escalation Catalog",
+    "kind": "scenario-catalog",
+    "path": "examples/workflow-escalation-catalog",
+    "packageName": "@tryagent/workflow-escalation-catalog-example",
+    "language": "mixed",
+    "sdkCoverage": ["python", "typescript"],
+    "description": "Stored workflow escalation scenarios that exercise both TryAgent SDKs against the platform lifecycle.",
+    "scenarioSlugs": [
+      "account-risk-review",
+      "appointment-scheduling",
+      "content-moderation",
+      "contract-clause-review",
+      "customer-support-policy-exception",
+      "invoice-approval",
+      "job-application-screening",
+      "lead-qualification",
+      "shipping-exception"
+    ],
+    "samplePolicy": "examples.workflow-catalog.python-sdk-review",
+    "sampleEscalation": {
+      "agentId": "workflow-catalog-python-agent",
+      "runId": "workflow-catalog-python-run-001",
+      "subject": {
+        "type": "example_project",
+        "id": "workflow-escalation-catalog",
+        "label": "Workflow escalation catalog Python SDK coverage"
+      },
+      "question": "Should the workflow escalation catalog remain published as a Python SDK platform example?",
+      "evidence": [
+        "The catalog stores nine workflow escalation scenarios from the product examples list.",
+        "The stored project declares Python and TypeScript SDK coverage.",
+        "The Python SDK must create, list, fetch, acknowledge, decide, and cancel example escalations against the platform contract."
+      ],
+      "choices": [
+        {
+          "id": "keep-published",
+          "label": "Keep published",
+          "consequence": "Treat the catalog as an active Python and TypeScript SDK platform example.",
+          "reversible": true
+        },
+        {
+          "id": "hold-for-review",
+          "label": "Hold for review",
+          "consequence": "Keep the example internal until both SDK coverage checks are reviewed.",
+          "reversible": true
+        },
+        {
+          "id": "remove-python-coverage",
+          "label": "Remove Python coverage",
+          "consequence": "Keep the TypeScript catalog but stop advertising Python SDK coverage.",
+          "reversible": true
+        }
+      ],
+      "severity": "sev3",
+      "metadata": {
+        "exampleProjectSlug": "workflow-escalation-catalog",
+        "workflowSlug": "workflow-escalation-catalog",
+        "trigger": "Python SDK platform E2E coverage for stored example projects"
+      }
+    },
+    "sampleDecision": {
+      "choice": "keep-published",
+      "reason": "The catalog now exercises the Python SDK against the same platform lifecycle as the TypeScript examples."
+    }
+  }
+]
